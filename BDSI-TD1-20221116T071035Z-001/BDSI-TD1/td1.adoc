@@ -1,0 +1,135 @@
+= TD1 -- BD et Ingénierie des SI
+
+:author: Frédéric Moal, Yohan Boichut
+:docyear: 2022
+:description: Master 1 MIAGE
+
+:doctype: article
+:source-highlighter: coderay
+:listing-caption: Listing
+:pdf-page-size: A4
+ifndef::imagesdir[:imagesdir: ./images]
+
+
+== Exercice 1 -- Manipulation de Docker
+
+Vous devrez lire les supports de cours pour pouvoir effectuer les opérations suivantes :
+
+. Récupérez et lancez un conteneur *httpd* version *2.4*. Il s'agit d'un serveur apache.
+. Ouvrez un navigateur et tapez l'adresse http://localhost:8080. Que constatez vous ? Expliquez le pourquoi de la chose.
+. Cherchez l'adresse IP du conteneur (inspect)
+. Ouvrez le navigateur et saisissez l'adresse http://IP_DU_CONTENEUR où IP_DU_CONTENEUR est l'IP que vous avez trouvée à la question précédente.
+Que constatez vous ?
+. Stoppez le conteneur et vérifiez avec le navigateur que l'URL n'est plus accessible.
+. Supprimez le.
+. Pour des raisons de simplicité d'utilisation, il peut être intéressant de mapper les ports du conteneur sur localhost. Une façon simple de le faire est de le faire lors de la première exécution grâce à l'option *-p*. Mappez le port 80 du conteneur sur le port 8080 de localhost.
+. Après avoir lancé le conteneur vérifiez qu'effectivement que *http://localhost:8080* donne bien le résultat attendu.
+. Stoppez maintenant et supprimez de nouveau le conteneur créé
+. Une option intéressante proposée par docker permet de partager une partie de votre disque avec le conteneur lancé. Créez un dossier *monserveur* et relancez le conteneur en prenant soin de mapper votre répertoire courant (en utilisant le chemin absolu) avec le dossier */usr/local/apache2/htdocs/* de votre conteneur.
+Ajoutez une page index.html dans votre dossier *monserveur* et vérifiez que le serveur affiche bien votre page.
+. Stoppez le conteneur et supprimez le.
+
+
+
+== Exercice 2 -- Une nuit au Musée
+
+Vous devez modéliser le SI du nouveau muséum d'histoire naturelle d'Orléans, le MOBE.
+Ce musée possède une collection d'objets, qu'il enrichie chaque année en achetant de nouvelles oeuvres.
+Ces oeuvres peuvent être exposées dans l'une des 20 salles du musée pendant une certaine période,
+sinon elles sont remisées dans la réserve jusqu'à la prochaine exposition.
+
+Un exemple : le musée a acheté le 15 septembre 2015 un tyrannosaure, Rex, stocké au début dans la réserve ;
+le 1er janvier 2016, il a été exposé dans le grand hall du musée ;
+le 1er septembre 2016, Rex a été déplacé dans la grande salle 1, pour l'exposition "les dinosaures".
+le 15 mars 2017, il est revenu dans le grand hall.
+Du 20 décembre 2018 au 1 avril 2019, il est retourné en réserve pour être restauré.
+Il est à nouveau exposé dans la grande salle 1 depuis.
+
+=== À réaliser
+. Pour la version 1 de votre SI, vous décidez d'utiliser MySQL ; donnez les tables permettant de modéliser les données,
+et les données de ces tables pour l'exemple du tyrannosaure.
+. Lancez une instance de mysql (nom du conteneur) tout en prenant soin de mapper le port 3306 du conteneur avec le port 3306 de localhost.
+. Le but maintenant est de se rendre à l'intérieur du conteneur et de prendre le contrôle en bash.
+. Une fois à l'intérieur, lancez la commande *mysql --password*. Normalement, l'invite de commande vous demande le mot de passe que vous avez dû définir lors du lancement du conteneur.
+. Créez les tables et ajoutez les données correspondant au scénario.
+
+
+
+== Exercice 3 -- Client Java
+
+Le but de cet exercice est de faire un client Java permettant de requêter la base de données MySql grâce au connecteur MySql récupérable via la dépendance Maven suivante :
+
+[source, xml]
+----
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>8.0.25</version>
+</dependency>
+----
+
+Une fois ceci fait, vérifiez que vous pouvez accèder à la base de données en cliquant sur l'onglet *Database* dans la marge à droite. La procédure à suivre est la suivante :
+
+Database -> *+* -> Data source -> MySQL
+
+Après avoir renseigné correctement les champs, cliquez sur le bouton *Test Connection*. Mettez à jour le connecteur si éventuellement IntellIJ vous le demande.
+
+Nous supposons dans l'exemple ci-dessous que la base de données se nomme *musee*
+et qu'il existe une table *salles* composée de deux champs.
+
+Créez un package *application* puis une classe *Connexion* à l'intérieur de ce dernier.
+Le programme ci-dessous permet d'afficher le contenu de la table *salles*.
+
+[source,java]
+----
+package application;
+import java.sql.*;
+
+class Connexion {
+    public static void main(String[] args) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            // Connexion à la base de données "musee", avec les identifiants de connexion du compte root
+            Connection connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/musee", "root", "root");
+            Statement stmt = connexion.createStatement();
+            ResultSet rs = stmt.executeQuery("SELEFT * FROM salles");
+            while (rs.next()) {
+                System.out.println(rs.getInt(1) + "  " + rs.getString(2));
+            }
+            connexion.close();
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
+}
+----
+
+=== À réaliser
+
+. Faites un programme permettant d'afficher le détail de tous les mouvements d'oeuvres enregistrés dans le SI.
+
+. Un tricératops vient d'arriver aujourd'hui. Il est exposé dans le grand hall.
+Faites un programme permettant de mettre à jour les tables pour ajouter ces données.
+
+. Refactorez le code de telle façon à ce que l'on puisse offrir aux utilisateurs des possibilités :
+.. d'ajout de salles/oeuvres/déplacements
+.. de récupération de l'ensemble des déplacements pour une oeuvre donnée
+.. de récupérer toutes les oeuvres exposées dans une salle à une date donnée. 
+
+
+
+== Exercice 4 -- Autre cas d'étude
+
+Nous voulons mettre en place une application pour la saisie de notes à l'université. Les étudiants sont identifiés par leur numéro d'étudiant. Ils sont inscrits dans une filière pour une année universitaire donnée. 
+Chaque filière est composée de deux semestres et chaque semestre est composé d'un certains nombre de modules. Un module a un libellé et un certain nombres d'ECTS. 
+
+* Nous voulons faire une application permettant aux responsables de modules d'envoyer les notes obtenues par les étudiants dans leurs modules. 
+* Lorsque toutes les notes sont saisies, nous voulons être capable d'extraire le PV de chaque semestre pour l'ensemble de la promotion
+* Nous voulons pouvoir extraire l'ensemble des notes d'un étudiant donné
+
+
+=== À réaliser
+
+. Proposez un modèle relationnel permettant de capturer l'ensemble des données de notre cas d'étude. 
+. Créez cette base de données sous MySQL
+. Développez une façade Java et un modèle en Java qui proposeront les fonctionnalités vues précédemment
